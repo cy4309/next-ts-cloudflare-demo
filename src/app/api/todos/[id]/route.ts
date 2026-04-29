@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { invalidateTodosCache } from "../route";
 
 type D1ApiSuccess = {
   success: true;
@@ -97,6 +98,8 @@ export async function DELETE(
     );
   }
 
+  await invalidateTodosCache();
+
   return NextResponse.json({ ok: true });
 }
 
@@ -143,6 +146,8 @@ export async function PUT(
       { status: 500 }
     );
   }
+
+  await invalidateTodosCache();
 
   return NextResponse.json({ ok: true });
 }

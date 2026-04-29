@@ -6,6 +6,8 @@ type Todo = {
   created_at: string;
 };
 
+const TODOS_CACHE_KEY = "todos:list:v1";
+
 type D1ApiSuccess<T> = {
   success: true;
   result: Array<{
@@ -83,7 +85,88 @@ async function queryD1<T>(
   };
 }
 
+async function readTodosCache(): Promise<Todo[] | null> {
+  const accountId = process.env.CLOUDFLARE_ACCOUNT_ID;
+  const namespaceId = process.env.CLOUDFLARE_KV_NAMESPACE_ID;
+  const token = process.env.CLOUDFLARE_API_TOKEN;
+
+  if (!accountId || !namespaceId || !token) {
+    return null;
+  }
+
+  const endpoint = `https://api.cloudflare.com/client/v4/accounts/${accountId}/storage/kv/namespaces/${namespaceId}/values/${TODOS_CACHE_KEY}`;
+  const res = await fetch(endpoint, {
+    method: "GET",
+    headers: {
+      Authorization: `Bearer ${token}`,
+    },
+    cache: "no-store",
+  });
+
+  if (!res.ok) {
+    return null;
+  }
+
+  const text = await res.text();
+  if (!text) return null;
+
+  try {
+    return JSON.parse(text) as Todo[];
+  } catch {
+    return null;
+  }
+}
+
+async function writeTodosCache(todos: Todo[]) {
+  const accountId = process.env.CLOUDFLARE_ACCOUNT_ID;
+  const namespaceId = process.env.CLOUDFLARE_KV_NAMESPACE_ID;
+  const token = process.env.CLOUDFLARE_API_TOKEN;
+
+  if (!accountId || !namespaceId || !token) {
+    return;
+  }
+
+  const endpoint = `https://api.cloudflare.com/client/v4/accounts/${accountId}/storage/kv/namespaces/${namespaceId}/values/${TODOS_CACHE_KEY}`;
+  await fetch(endpoint, {
+    method: "PUT",
+    headers: {
+      Authorization: `Bearer ${token}`,
+      "content-type": "application/json",
+    },
+    body: JSON.stringify(todos),
+    cache: "no-store",
+  });
+}
+
+export async function invalidateTodosCache() {
+  const accountId = process.env.CLOUDFLARE_ACCOUNT_ID;
+  const namespaceId = process.env.CLOUDFLARE_KV_NAMESPACE_ID;
+  const token = process.env.CLOUDFLARE_API_TOKEN;
+
+  if (!accountId || !namespaceId || !token) {
+    return;
+  }
+
+  const endpoint = `https://api.cloudflare.com/client/v4/accounts/${accountId}/storage/kv/namespaces/${namespaceId}/values/${TODOS_CACHE_KEY}`;
+  await fetch(endpoint, {
+    method: "DELETE",
+    headers: {
+      Authorization: `Bearer ${token}`,
+    },
+    cache: "no-store",
+  });
+}
+
 export async function GET() {
+  const cachedTodos = await readTodosCache();
+  if (cachedTodos) {
+    return NextResponse.json({
+      ok: true,
+      todos: cachedTodos,
+      source: "kv-cache",
+    });
+  }
+
   const query = await queryD1<Todo>(
     "SELECT id, content, created_at FROM todos ORDER BY id DESC"
   );
@@ -97,9 +180,12 @@ export async function GET() {
     );
   }
 
+  await writeTodosCache(query.results ?? []);
+
   return NextResponse.json({
     ok: true,
     todos: query.results ?? [],
+    source: "d1",
   });
 }
 
@@ -130,6 +216,8 @@ export async function POST(request: Request) {
       { status: 500 }
     );
   }
+
+  await invalidateTodosCache();
 
   return NextResponse.json({
     ok: true,

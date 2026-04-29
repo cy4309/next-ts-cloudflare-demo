@@ -3,6 +3,8 @@
 目前包含：
 - `/api/ping`：基本 API 測試
 - `/api/todos`：D1 Todo 練習（GET/POST）
+- `/api/todos/:id`：Todo 更新與刪除（PUT/DELETE）
+- KV 快取：Todo 列表讀取快取
 - `db/0001_create_todos.sql`：建立 `todos` 資料表
 
 ## 本機啟動
@@ -27,20 +29,20 @@ npm run dev
 ```bash
 CLOUDFLARE_ACCOUNT_ID=your_account_id
 CLOUDFLARE_D1_DATABASE_ID=your_database_id
+CLOUDFLARE_KV_NAMESPACE_ID=your_kv_namespace_id
 CLOUDFLARE_API_TOKEN=your_api_token
 ```
 
 4) API Token 權限建議
 - 需要 D1 的讀寫權限（至少可查詢與寫入指定 DB）
+- 需要 KV 的讀寫權限（至少可讀取/寫入指定 namespace）
 
 ## 驗收
 
 - 首頁 `Step 2` 可新增 Todo
-- 可按重新讀取看到最新列表
+- 可按重新讀取看到最新列表（第一次可能來自 D1，之後命中 KV）
 - 直接打 `/api/todos` 可看到 JSON
 
 ## 下一步
 
-- DELETE `/api/todos/:id`
-- KV 快取 Todo 列表
 - R2 圖片上傳
