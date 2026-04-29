@@ -4,6 +4,7 @@ type Todo = {
   id: number;
   content: string;
   created_at: string;
+  image_url: string | null;
 };
 
 const TODOS_CACHE_KEY = "todos:list:v1";
@@ -168,7 +169,7 @@ export async function GET() {
   }
 
   const query = await queryD1<Todo>(
-    "SELECT id, content, created_at FROM todos ORDER BY id DESC"
+    "SELECT id, content, created_at, image_url FROM todos ORDER BY id DESC"
   );
   if (!query.ok) {
     return NextResponse.json(
@@ -190,8 +191,9 @@ export async function GET() {
 }
 
 export async function POST(request: Request) {
-  const body = (await request.json()) as { content?: string };
+  const body = (await request.json()) as { content?: string; imageUrl?: string };
   const content = body.content?.trim();
+  const imageUrl = body.imageUrl?.trim() || null;
 
   if (!content) {
     return NextResponse.json(
@@ -204,8 +206,8 @@ export async function POST(request: Request) {
   }
 
   const insertResult = await queryD1(
-    "INSERT INTO todos (content, created_at) VALUES (?, datetime('now'))",
-    [content]
+    "INSERT INTO todos (content, created_at, image_url) VALUES (?, datetime('now'), ?)",
+    [content, imageUrl]
   );
   if (!insertResult.ok) {
     return NextResponse.json(

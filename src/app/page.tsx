@@ -1,11 +1,12 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 
 type Todo = {
   id: number;
   content: string;
   created_at: string;
+  image_url: string | null;
 };
 
 export default function Home() {
@@ -16,6 +17,8 @@ export default function Home() {
   const [todosLoading, setTodosLoading] = useState(false);
   const [editingId, setEditingId] = useState<number | null>(null);
   const [editingContent, setEditingContent] = useState("");
+  const [selectedFile, setSelectedFile] = useState<File | null>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   async function testEdgeApi() {
     setLoading(true);
@@ -118,10 +121,41 @@ export default function Home() {
 
     setTodosLoading(true);
     try {
+      let imageUrl: string | null = null;
+      if (selectedFile) {
+        const formData = new FormData();
+        formData.append("file", selectedFile);
+
+        const uploadRes = await fetch("/api/upload", {
+          method: "POST",
+          body: formData,
+        });
+        const uploadData = (await uploadRes.json()) as {
+          ok: boolean;
+          url?: string | null;
+          error?: string;
+        };
+        if (!uploadRes.ok || !uploadData.ok) {
+          setResult(
+            JSON.stringify(
+              {
+                httpStatus: uploadRes.status,
+                ok: false,
+                error: uploadData.error ?? "Failed to upload file",
+              },
+              null,
+              2
+            )
+          );
+          return;
+        }
+        imageUrl = uploadData.url ?? null;
+      }
+
       const res = await fetch("/api/todos", {
         method: "POST",
         headers: { "content-type": "application/json" },
-        body: JSON.stringify({ content }),
+        body: JSON.stringify({ content, imageUrl }),
       });
       const data = (await res.json()) as { ok: boolean; error?: string };
       if (!res.ok || !data.ok) {
@@ -140,6 +174,8 @@ export default function Home() {
       }
 
       setTodoInput("");
+      setSelectedFile(null);
+      if (fileInputRef.current) fileInputRef.current.value = "";
       await loadTodos();
     } catch (error) {
       setResult(
@@ -282,7 +318,7 @@ export default function Home() {
         </section>
 
         <section className="rounded-lg border p-4 space-y-2 text-sm">
-          <h2 className="text-xl font-semibold">Step 2: D1 Todo 練習</h2>
+          <h2 className="text-xl font-semibold">Step 2: D1 + KV + R2 Todo 練習</h2>
           <div className="flex gap-2">
             <input
               value={todoInput}
@@ -299,6 +335,18 @@ export default function Home() {
               新增
             </button>
           </div>
+          <input
+            ref={fileInputRef}
+            type="file"
+            accept="image/*"
+            onChange={(event) =>
+              setSelectedFile(event.target.files?.[0] ?? null)
+            }
+            className="border rounded px-3 py-2 w-full"
+          />
+          {selectedFile ? (
+            <p className="text-xs opacity-80">已選擇圖片：{selectedFile.name}</p>
+          ) : null}
           <button
             type="button"
             onClick={loadTodos}
@@ -324,6 +372,13 @@ export default function Home() {
                     <div>{todo.content}</div>
                   )}
                   <div className="opacity-70 text-xs">{todo.created_at}</div>
+                  {todo.image_url ? (
+                    <img
+                      src={todo.image_url}
+                      alt="todo attachment"
+                      className="mt-2 max-w-52 rounded border"
+                    />
+                  ) : null}
                 </div>
                 <div className="flex gap-2">
                   {editingId === todo.id ? (
