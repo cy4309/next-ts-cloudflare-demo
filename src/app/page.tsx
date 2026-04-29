@@ -345,20 +345,27 @@ export default function Home() {
               新增
             </button>
           </div>
-          <input
-            ref={fileInputRef}
-            type="file"
-            accept="image/*"
-            onChange={(event) =>
-              setSelectedFile(event.target.files?.[0] ?? null)
-            }
-            className="border rounded px-3 py-2 w-full"
-          />
-          {selectedFile ? (
-            <p className="text-xs opacity-80">
-              已選擇圖片：{selectedFile.name}
-            </p>
-          ) : null}
+          <div className="rounded-md border px-3 py-2 flex items-center gap-3">
+            <label
+              htmlFor="todo-image-upload"
+              className="rounded-md border px-3 py-1.5 text-xs cursor-pointer hover:bg-black/5 dark:hover:bg-white/10"
+            >
+              選擇圖片
+            </label>
+            <input
+              id="todo-image-upload"
+              ref={fileInputRef}
+              type="file"
+              accept="image/*"
+              onChange={(event) =>
+                setSelectedFile(event.target.files?.[0] ?? null)
+              }
+              className="hidden"
+            />
+            <span className="text-xs opacity-80 truncate">
+              {selectedFile ? selectedFile.name : "尚未選擇檔案"}
+            </span>
+          </div>
           <button
             type="button"
             onClick={loadTodos}
@@ -367,7 +374,7 @@ export default function Home() {
           >
             {todosLoading ? "讀取中..." : "重新讀取"}
           </button>
-          <ul className="space-y-1">
+          <ul className="space-y-1 !mt-12">
             {todos.map((todo) => (
               <li
                 key={todo.id}
