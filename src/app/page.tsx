@@ -9,6 +9,14 @@ type Todo = {
   image_url: string | null;
 };
 
+function formatCreatedAt(value: string) {
+  // D1 datetime('now') returns UTC-like string: "YYYY-MM-DD HH:mm:ss".
+  // Treat it as UTC and convert to local timezone for display.
+  const utcDate = new Date(value.replace(" ", "T") + "Z");
+  if (Number.isNaN(utcDate.getTime())) return value;
+  return utcDate.toLocaleString("zh-TW", { hour12: false });
+}
+
 export default function Home() {
   const [loading, setLoading] = useState(false);
   const [result, setResult] = useState<string>("");
@@ -371,7 +379,9 @@ export default function Home() {
                   ) : (
                     <div>{todo.content}</div>
                   )}
-                  <div className="opacity-70 text-xs">{todo.created_at}</div>
+                  <div className="opacity-70 text-xs">
+                    {formatCreatedAt(todo.created_at)}
+                  </div>
                   {todo.image_url ? (
                     <img
                       src={todo.image_url}
