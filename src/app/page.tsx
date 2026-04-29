@@ -45,8 +45,8 @@ export default function Home() {
               data,
             },
             null,
-            2
-          )
+            2,
+          ),
         );
       } else {
         const text = await res.text();
@@ -59,8 +59,8 @@ export default function Home() {
               raw: text.slice(0, 300),
             },
             null,
-            2
-          )
+            2,
+          ),
         );
       }
     } catch (error) {
@@ -72,8 +72,8 @@ export default function Home() {
               error instanceof Error ? error.message : "Unknown request error",
           },
           null,
-          2
-        )
+          2,
+        ),
       );
     } finally {
       setLoading(false);
@@ -99,8 +99,8 @@ export default function Home() {
               error: data.error ?? "Failed to load todos",
             },
             null,
-            2
-          )
+            2,
+          ),
         );
         return;
       }
@@ -115,8 +115,8 @@ export default function Home() {
               error instanceof Error ? error.message : "Unknown request error",
           },
           null,
-          2
-        )
+          2,
+        ),
       );
     } finally {
       setTodosLoading(false);
@@ -152,8 +152,8 @@ export default function Home() {
                 error: uploadData.error ?? "Failed to upload file",
               },
               null,
-              2
-            )
+              2,
+            ),
           );
           return;
         }
@@ -175,8 +175,8 @@ export default function Home() {
               error: data.error ?? "Failed to add todo",
             },
             null,
-            2
-          )
+            2,
+          ),
         );
         return;
       }
@@ -194,8 +194,8 @@ export default function Home() {
               error instanceof Error ? error.message : "Unknown request error",
           },
           null,
-          2
-        )
+          2,
+        ),
       );
     } finally {
       setTodosLoading(false);
@@ -218,8 +218,8 @@ export default function Home() {
               error: data.error ?? "Failed to delete todo",
             },
             null,
-            2
-          )
+            2,
+          ),
         );
         return;
       }
@@ -234,8 +234,8 @@ export default function Home() {
               error instanceof Error ? error.message : "Unknown request error",
           },
           null,
-          2
-        )
+          2,
+        ),
       );
     } finally {
       setTodosLoading(false);
@@ -273,8 +273,8 @@ export default function Home() {
               error: data.error ?? "Failed to update todo",
             },
             null,
-            2
-          )
+            2,
+          ),
         );
         return;
       }
@@ -290,8 +290,8 @@ export default function Home() {
               error instanceof Error ? error.message : "Unknown request error",
           },
           null,
-          2
-        )
+          2,
+        ),
       );
     } finally {
       setTodosLoading(false);
@@ -303,7 +303,7 @@ export default function Home() {
   }, []);
 
   return (
-    <main className="min-h-screen p-8 md:p-12 bg-background text-foreground">
+    <main className="min-h-screen p-4 md:p-12 bg-background text-foreground">
       <div className="max-w-2xl mx-auto space-y-6">
         <h1 className="text-3xl font-bold">Cloudflare 練習場</h1>
 
@@ -326,7 +326,9 @@ export default function Home() {
         </section>
 
         <section className="rounded-lg border p-4 space-y-2 text-sm">
-          <h2 className="text-xl font-semibold">Step 2: D1 + KV + R2 Todo 練習</h2>
+          <h2 className="text-xl font-semibold">
+            Step 2: D1 + KV + R2 Todo 練習
+          </h2>
           <div className="flex gap-2">
             <input
               value={todoInput}
@@ -353,7 +355,9 @@ export default function Home() {
             className="border rounded px-3 py-2 w-full"
           />
           {selectedFile ? (
-            <p className="text-xs opacity-80">已選擇圖片：{selectedFile.name}</p>
+            <p className="text-xs opacity-80">
+              已選擇圖片：{selectedFile.name}
+            </p>
           ) : null}
           <button
             type="button"
@@ -367,68 +371,72 @@ export default function Home() {
             {todos.map((todo) => (
               <li
                 key={todo.id}
-                className="rounded border px-3 py-2 flex items-start justify-between gap-3"
+                className="rounded border px-3 py-2 flex flex-col items-start justify-between gap-3"
               >
-                <div>
-                  {editingId === todo.id ? (
-                    <input
-                      value={editingContent}
-                      onChange={(event) => setEditingContent(event.target.value)}
-                      className="border rounded px-2 py-1 bg-transparent"
-                    />
-                  ) : (
-                    <div>{todo.content}</div>
-                  )}
-                  <div className="opacity-70 text-xs">
-                    {formatCreatedAt(todo.created_at)}
+                <div className="w-full flex items-center justify-between">
+                  <div>
+                    {editingId === todo.id ? (
+                      <input
+                        value={editingContent}
+                        onChange={(event) =>
+                          setEditingContent(event.target.value)
+                        }
+                        className="border rounded px-2 py-1 bg-transparent"
+                      />
+                    ) : (
+                      <div>{todo.content}</div>
+                    )}
+                    <div className="opacity-70 text-xs">
+                      {formatCreatedAt(todo.created_at)}
+                    </div>
                   </div>
-                  {todo.image_url ? (
-                    <img
-                      src={todo.image_url}
-                      alt="todo attachment"
-                      className="mt-2 max-w-52 rounded border"
-                    />
-                  ) : null}
-                </div>
-                <div className="flex gap-2">
-                  {editingId === todo.id ? (
-                    <>
+                  <div className="flex gap-2">
+                    {editingId === todo.id ? (
+                      <>
+                        <button
+                          type="button"
+                          onClick={() => saveEdit(todo.id)}
+                          disabled={todosLoading}
+                          className="rounded border px-2 py-1 text-xs"
+                        >
+                          儲存
+                        </button>
+                        <button
+                          type="button"
+                          onClick={cancelEdit}
+                          disabled={todosLoading}
+                          className="rounded border px-2 py-1 text-xs"
+                        >
+                          取消
+                        </button>
+                      </>
+                    ) : (
                       <button
                         type="button"
-                        onClick={() => saveEdit(todo.id)}
+                        onClick={() => startEdit(todo)}
                         disabled={todosLoading}
                         className="rounded border px-2 py-1 text-xs"
                       >
-                        儲存
+                        編輯
                       </button>
-                      <button
-                        type="button"
-                        onClick={cancelEdit}
-                        disabled={todosLoading}
-                        className="rounded border px-2 py-1 text-xs"
-                      >
-                        取消
-                      </button>
-                    </>
-                  ) : (
+                    )}
                     <button
                       type="button"
-                      onClick={() => startEdit(todo)}
+                      onClick={() => deleteTodo(todo.id)}
                       disabled={todosLoading}
                       className="rounded border px-2 py-1 text-xs"
                     >
-                      編輯
+                      刪除
                     </button>
-                  )}
-                  <button
-                    type="button"
-                    onClick={() => deleteTodo(todo.id)}
-                    disabled={todosLoading}
-                    className="rounded border px-2 py-1 text-xs"
-                  >
-                    刪除
-                  </button>
+                  </div>
                 </div>
+                {todo.image_url ? (
+                  <img
+                    src={todo.image_url}
+                    alt="todo attachment"
+                    className="mt-2 max-w-52 rounded border"
+                  />
+                ) : null}
               </li>
             ))}
           </ul>
