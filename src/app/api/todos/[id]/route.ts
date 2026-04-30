@@ -1,6 +1,8 @@
 import { NextResponse } from "next/server";
 import { invalidateTodosCache } from "../route";
 
+export const runtime = "edge";
+
 type D1ApiSuccess = {
   success: true;
   result: Array<{

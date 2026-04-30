@@ -1,5 +1,7 @@
 import { NextResponse } from "next/server";
 
+export const runtime = "edge";
+
 function getRequiredEnv() {
   const accountId = process.env.CLOUDFLARE_ACCOUNT_ID;
   const bucketName = process.env.CLOUDFLARE_R2_BUCKET_NAME;
